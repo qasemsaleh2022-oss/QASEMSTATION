@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QASEMSTATION - طلبات المطاعم</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <header class="app-header">
@@ -72,14 +73,70 @@
           <span id="cart-total">0 ريال</span>
         </div>
         <div class="summary-row">
-          <span>الضريبة:</span>
+          <span>الضريبة (15%):</span>
           <span id="cart-tax">0 ريال</span>
+        </div>
+        <div class="summary-row">
+          <span>رسوم التوصيل:</span>
+          <span id="delivery-fee">15 ريال</span>
         </div>
         <div class="summary-row total">
           <span>الإجمالي:</span>
           <span id="cart-grand-total">0 ريال</span>
         </div>
-        <button id="checkout-btn" class="checkout-btn" onclick="checkout()">إتمام الطلب</button>
+        <button id="checkout-btn" class="checkout-btn" onclick="proceedToCheckout()">إتمام الطلب</button>
+      </div>
+    </section>
+
+    <!-- صفحة الدفع -->
+    <section id="checkout" class="page">
+      <div class="page-header">
+        <button onclick="showPage('cart')" class="back-btn">← رجوع</button>
+        <h2>إتمام الطلب</h2>
+      </div>
+      <div class="checkout-container">
+        <div class="checkout-summary">
+          <h3>ملخص الطلب</h3>
+          <div id="checkout-items"></div>
+          <div class="checkout-total">
+            <div class="summary-row">
+              <span>الإجمالي:</span>
+              <span id="checkout-grand-total">0 ريال</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="payment-methods">
+          <h3>طريقة الدفع</h3>
+          <div class="payment-options">
+            <div class="payment-option selected" data-method="wallet">
+              <i class="fas fa-wallet"></i>
+              <span>المحفظة (QASEMPAY)</span>
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="payment-option" data-method="stc">
+              <i class="fas fa-mobile-alt"></i>
+              <span>STC Pay</span>
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="payment-option" data-method="card">
+              <i class="fas fa-credit-card"></i>
+              <span>بطاقة ائتمان</span>
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="payment-option" data-method="cash">
+              <i class="fas fa-money-bill-wave"></i>
+              <span>الدفع نقداً عند الاستلام</span>
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+          
+          <div id="payment-details">
+            <!-- سيتم إضافة تفاصيل الدفع هنا بناءً على الطريقة المختارة -->
+          </div>
+          
+          <button class="confirm-payment-btn" onclick="confirmPayment()">تأكيد الدفع</button>
+        </div>
       </div>
     </section>
 
@@ -100,14 +157,46 @@
         <span>رصيدك الحالي:</span>
         <span id="wallet-balance">0 ريال</span>
       </div>
-      <div class="add-funds">
-        <h3>إضافة رصيد</h3>
-        <div class="fund-options">
-          <button onclick="addFunds(20)">+20 ريال</button>
-          <button onclick="addFunds(50)">+50 ريال</button>
-          <button onclick="addFunds(100)">+100 ريال</button>
+      
+      <div class="recharge-section">
+        <h3>شحن الرصيد</h3>
+        <div class="amount-options">
+          <div class="amount-option" data-amount="20">
+            <span>20 ريال</span>
+          </div>
+          <div class="amount-option" data-amount="50">
+            <span>50 ريال</span>
+          </div>
+          <div class="amount-option" data-amount="100">
+            <span>100 ريال</span>
+          </div>
+          <div class="amount-option" data-amount="200">
+            <span>200 ريال</span>
+          </div>
         </div>
+        
+        <div class="custom-amount">
+          <input type="number" id="custom-amount" placeholder="أو أدخل المبلغ يدوياً">
+          <span>ريال</span>
+        </div>
+        
+        <div class="payment-method-selection">
+          <h4>اختر طريقة الدفع:</h4>
+          <div class="payment-methods-wallet">
+            <div class="payment-method-wallet selected" data-method="stc">
+              <i class="fas fa-mobile-alt"></i>
+              <span>STC Pay</span>
+            </div>
+            <div class="payment-method-wallet" data-method="card">
+              <i class="fas fa-credit-card"></i>
+              <span>بطاقة ائتمان</span>
+            </div>
+          </div>
+        </div>
+        
+        <button class="recharge-btn" onclick="initiateRecharge()">شحن الرصيد</button>
       </div>
+      
       <div class="transaction-history">
         <h3>سجل المعاملات</h3>
         <div id="transaction-list" class="transaction-list"></div>
@@ -148,6 +237,23 @@
       </div>
     </section>
   </main>
+
+  <!-- نافذة التأكيد -->
+  <div id="confirmation-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>تأكيد عملية الشحن</h3>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>هل تريد شحن رصيد بقيمة <span id="confirm-amount">0</span> ريال باستخدام <span id="confirm-method">STC Pay</span>؟</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal()">إلغاء</button>
+        <button class="modal-btn confirm" onclick="confirmRecharge()">تأكيد</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="app-footer">
     <div class="footer-content">
