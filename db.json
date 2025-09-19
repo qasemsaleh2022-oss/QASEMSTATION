@@ -1,0 +1,70 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "qasem",
+      "password": "1234",
+      "balance": 100,
+      "email": "qasem@example.com",
+      "addresses": []
+    }
+  ],
+  "restaurants": [
+    {
+      "id": 1,
+      "name": "مطعم الرومانسية",
+      "image": "restaurant1.jpg",
+      "rating": 4.5,
+      "deliveryTime": "30-45 دقيقة",
+      "menu": [
+        {
+          "id": 1,
+          "name": "كبسة دجاج",
+          "price": 35,
+          "description": "أرز مع دجاج وتوابل خاصة"
+        },
+        {
+          "id": 2,
+          "name": "مندي لحم",
+          "price": 45,
+          "description": "أرز مندي مع لحم ضأن"
+        },
+        {
+          "id": 3,
+          "name": "شاورما",
+          "price": 25,
+          "description": "شاورما لحم أو دجاج مع خبز وصوص خاص"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "مطعم القرية النجدية",
+      "image": "restaurant2.jpg",
+      "rating": 4.2,
+      "deliveryTime": "40-55 دقيقة",
+      "menu": [
+        {
+          "id": 4,
+          "name": "جريش",
+          "price": 30,
+          "description": "جريش نجدية تقليدية"
+        },
+        {
+          "id": 5,
+          "name": "قرصان",
+          "price": 28,
+          "description": "قرصان مع مرق اللحم"
+        },
+        {
+          "id": 6,
+          "name": "مفطح",
+          "price": 50,
+          "description": "مفطح لحم ضأن مع أرز"
+        }
+      ]
+    }
+  ],
+  "orders": [],
+  "transactions": []
+}

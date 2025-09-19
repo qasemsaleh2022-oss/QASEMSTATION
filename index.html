@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QASEMSTATION - طلبات المطاعم</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-container">
+        <img src="qasem_station_logo.svg" alt="QASEMSTATION" class="logo">
+      </div>
+      <nav class="main-nav">
+        <button onclick="showPage('home')" class="nav-btn active">
+          <span class="icon">🏠</span>
+          <span class="text">الرئيسية</span>
+        </button>
+        <button onclick="showPage('cart')" class="nav-btn">
+          <span class="icon">🛒</span>
+          <span class="text">السلة</span>
+          <span id="cart-count" class="badge">0</span>
+        </button>
+        <button onclick="showPage('orders')" class="nav-btn">
+          <span class="icon">🧾</span>
+          <span class="text">طلباتي</span>
+        </button>
+        <button onclick="showPage('wallet')" class="nav-btn">
+          <span class="icon">💳</span>
+          <span class="text">المحفظة</span>
+        </button>
+        <button onclick="showPage('login')" class="nav-btn">
+          <span class="icon">👤</span>
+          <span class="text">الحساب</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- الصفحة الرئيسية -->
+    <section id="home" class="page active">
+      <div class="page-header">
+        <h2>المطاعم المتاحة</h2>
+        <div class="search-box">
+          <input type="text" id="restaurant-search" placeholder="ابحث عن مطعم...">
+          <button class="search-btn">🔍</button>
+        </div>
+      </div>
+      <div id="restaurant-list" class="restaurant-grid"></div>
+    </section>
+
+    <!-- صفحة المطعم -->
+    <section id="restaurant" class="page">
+      <div class="page-header">
+        <button onclick="showPage('home')" class="back-btn">← رجوع</button>
+        <h2 id="restaurant-name"></h2>
+      </div>
+      <div id="menu-list" class="menu-grid"></div>
+    </section>
+
+    <!-- السلة -->
+    <section id="cart" class="page">
+      <div class="page-header">
+        <h2>سلة التسوق</h2>
+      </div>
+      <div id="cart-items" class="cart-items"></div>
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>المجموع:</span>
+          <span id="cart-total">0 ريال</span>
+        </div>
+        <div class="summary-row">
+          <span>الضريبة:</span>
+          <span id="cart-tax">0 ريال</span>
+        </div>
+        <div class="summary-row total">
+          <span>الإجمالي:</span>
+          <span id="cart-grand-total">0 ريال</span>
+        </div>
+        <button id="checkout-btn" class="checkout-btn" onclick="checkout()">إتمام الطلب</button>
+      </div>
+    </section>
+
+    <!-- الطلبات -->
+    <section id="orders" class="page">
+      <div class="page-header">
+        <h2>طلباتي</h2>
+      </div>
+      <div id="orders-list" class="orders-list"></div>
+    </section>
+
+    <!-- المحفظة -->
+    <section id="wallet" class="page">
+      <div class="page-header">
+        <h2>محفظة QASEMPAY</h2>
+      </div>
+      <div class="wallet-balance">
+        <span>رصيدك الحالي:</span>
+        <span id="wallet-balance">0 ريال</span>
+      </div>
+      <div class="add-funds">
+        <h3>إضافة رصيد</h3>
+        <div class="fund-options">
+          <button onclick="addFunds(20)">+20 ريال</button>
+          <button onclick="addFunds(50)">+50 ريال</button>
+          <button onclick="addFunds(100)">+100 ريال</button>
+        </div>
+      </div>
+      <div class="transaction-history">
+        <h3>سجل المعاملات</h3>
+        <div id="transaction-list" class="transaction-list"></div>
+      </div>
+    </section>
+
+    <!-- الحساب -->
+    <section id="login" class="page">
+      <div class="page-header">
+        <h2>تسجيل الدخول</h2>
+      </div>
+      <div id="login-form" class="login-form">
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="login()">دخول</button>
+        <p class="register-text">ليس لديك حساب؟ <a href="#" onclick="showRegister()">سجل الآن</a></p>
+      </div>
+      <div id="register-form" class="login-form" style="display:none;">
+        <input type="text" id="new-username" placeholder="اسم المستخدم الجديد">
+        <input type="password" id="new-password" placeholder="كلمة المرور">
+        <input type="password" id="confirm-password" placeholder="تأكيد كلمة المرور">
+        <button onclick="register()">تسجيل</button>
+        <p class="register-text">لديك حساب؟ <a href="#" onclick="showLogin()">تسجيل الدخول</a></p>
+      </div>
+      <div id="user-info" class="user-info" style="display:none;">
+        <div class="user-profile">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <p>مرحباً، <span id="user-name"></span></p>
+            <p class="user-email" id="user-email"></p>
+          </div>
+        </div>
+        <div class="user-actions">
+          <button class="action-btn">تعديل الملف الشخصي</button>
+          <button class="action-btn">العناوين</button>
+          <button class="action-btn" onclick="logout()">تسجيل خروج</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>© 2025 QASEMSTATION - جميع الحقوق محفوظة</p>
+      <div class="footer-links">
+        <a href="#">شروط الاستخدام</a>
+        <a href="#">سياسة الخصوصية</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
