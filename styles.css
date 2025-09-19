@@ -351,6 +351,116 @@ body {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+/* صفحة الدفع */
+.checkout-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.checkout-summary, .payment-methods {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.checkout-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.payment-option.selected {
+  border-color: #F47C20;
+  background-color: #fffaf0;
+}
+
+.payment-option i {
+  margin-left: 10px;
+  font-size: 20px;
+  color: #666;
+}
+
+.payment-option.selected i:last-child {
+  color: #F47C20;
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.payment-detail {
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.stc-payment-form, .card-payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stc-payment-form input, .card-payment-form input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.card-details {
+  display: flex;
+  gap: 10px;
+}
+
+.card-expiry, .card-cvv {
+  flex: 1;
+}
+
+.verify-btn {
+  background: #F47C20;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.wallet-balance-check {
+  font-weight: bold;
+  color: #F47C20;
+  margin-top: 10px;
+}
+
+.confirm-payment-btn {
+  width: 100%;
+  background: #F47C20;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
 /* الطلبات */
 .orders-list {
   display: flex;
@@ -406,6 +516,7 @@ body {
   margin-bottom: 15px;
   padding-bottom: 15px;
   border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
 }
 
 .order-details p {
@@ -448,7 +559,7 @@ body {
   margin-top: 10px;
 }
 
-.add-funds {
+.recharge-section {
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -456,31 +567,99 @@ body {
   margin-bottom: 20px;
 }
 
-.add-funds h3 {
+.recharge-section h3 {
   margin: 0 0 15px 0;
   color: #333;
 }
 
-.fund-options {
-  display: flex;
+.amount-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
-.fund-options button {
-  background: #f1f1f1;
+.amount-option {
+  padding: 15px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.amount-option.selected {
+  border-color: #F47C20;
+  background-color: #fffaf0;
+  color: #F47C20;
+  font-weight: bold;
+}
+
+.custom-amount {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.custom-amount input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-left: 10px;
+}
+
+.payment-method-selection {
+  margin-bottom: 20px;
+}
+
+.payment-method-selection h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.payment-methods-wallet {
+  display: flex;
+  gap: 10px;
+}
+
+.payment-method-wallet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.payment-method-wallet.selected {
+  border-color: #F47C20;
+  background-color: #fffaf0;
+}
+
+.payment-method-wallet i {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.payment-method-wallet.selected i {
+  color: #F47C20;
+}
+
+.recharge-btn {
+  width: 100%;
+  background: #F47C20;
+  color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 15px;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  flex: 1;
-  min-width: 100px;
-}
-
-.fund-options button:hover {
-  background: #F47C20;
-  color: white;
+  font-size: 16px;
 }
 
 .transaction-history {
@@ -532,6 +711,88 @@ body {
 
 .transaction-amount.debit {
   color: #e74c3c;
+}
+
+/* نافذة التأكيد */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 0;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #000;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  gap: 10px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-btn.cancel {
+  background: #f1f1f1;
+  color: #333;
+}
+
+.modal-btn.confirm {
+  background: #F47C20;
+  color: white;
 }
 
 /* صفحة الحساب */
@@ -698,6 +959,18 @@ body {
     grid-template-columns: 1fr;
   }
   
+  .checkout-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .amount-options {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .payment-methods-wallet {
+    flex-direction: column;
+  }
+  
   .footer-content {
     flex-direction: column;
     text-align: center;
@@ -706,4 +979,4 @@ body {
   .footer-links {
     justify-content: center;
   }
-}
+    }
