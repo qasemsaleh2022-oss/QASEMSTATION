@@ -19,6 +19,10 @@ let db = {
 let currentUser = null;
 let cart = [];
 let currentRestaurant = null;
+let selectedAmount = 0;
+let selectedPaymentMethod = "stc";
+let rechargeAmount = 0;
+let rechargeMethod = "stc";
 
 // حفظ في localStorage
 function saveDB() {
@@ -36,7 +40,8 @@ loadDB();
 function updateCartBadge() {
   const cartCount = document.getElementById('cart-count');
   if (cartCount) {
-    cartCount.textContent = cart.length;
+    const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+    cartCount.textContent = totalItems;
   }
 }
 
@@ -45,13 +50,15 @@ function showPage(id) {
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
   
   document.getElementById(id).classList.add("active");
-  document.querySelector(`.nav-btn[onclick="showPage('${id}')"]`).classList.add("active");
+  const navBtn = document.querySelector(`.nav-btn[onclick="showPage('${id}')"]`);
+  if (navBtn) navBtn.classList.add("active");
   
   if (id === "home") renderRestaurants();
   if (id === "orders") renderOrders();
   if (id === "wallet") {
     updateWallet();
     renderTransactions();
+    initWalletPage();
   }
   if (id === "login") {
     if (currentUser) {
@@ -66,6 +73,35 @@ function showPage(id) {
     }
   }
   if (id === "cart") renderCart();
+}
+
+function initWalletPage() {
+  // تهيئة خيارات المبلغ
+  const amountOptions = document.querySelectorAll('.amount-option');
+  amountOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      amountOptions.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedAmount = parseInt(option.getAttribute('data-amount'));
+      document.getElementById('custom-amount').value = '';
+    });
+  });
+  
+  // تهيئة خيارات الدفع
+  const paymentMethods = document.querySelectorAll('.payment-method-wallet');
+  paymentMethods.forEach(method => {
+    method.addEventListener('click', () => {
+      paymentMethods.forEach(m => m.classList.remove('selected'));
+      method.classList.add('selected');
+      rechargeMethod = method.getAttribute('data-method');
+    });
+  });
+  
+  // التعامل مع الإدخال المخصص
+  document.getElementById('custom-amount').addEventListener('input', (e) => {
+    amountOptions.forEach(opt => opt.classList.remove('selected'));
+    selectedAmount = parseInt(e.target.value) || 0;
+  });
 }
 
 function showRestaurant(restId) {
@@ -175,8 +211,9 @@ function renderCart() {
     cartItems.appendChild(cartItem);
   });
   
-  const tax = total * 0.15; // ضريبة 15%
-  const grandTotal = total + tax;
+  const tax = total * 0.15;
+  const deliveryFee = 15;
+  const grandTotal = total + tax + deliveryFee;
   
   cartTotal.textContent = `${total} ريال`;
   cartTax.textContent = `${tax.toFixed(2)} ريال`;
@@ -200,7 +237,7 @@ function removeCartItem(index) {
   renderCart();
 }
 
-function checkout() {
+function proceedToCheckout() {
   if (cart.length === 0) {
     alert("السلة فارغة، أضف عناصر أولاً");
     return;
@@ -218,18 +255,123 @@ function checkout() {
     total += item.price * item.quantity;
   });
   const tax = total * 0.15;
-  const grandTotal = total + tax;
+  const deliveryFee = 15;
+  const grandTotal = total + tax + deliveryFee;
   
-  // التحقق من الرصيد
-  if (currentUser.balance < grandTotal) {
-    alert("رصيدك غير كافٍ، يرجى شحن المحفظة");
+  // التحقق من الرصيد إذا كانت طريقة الدفع بالمحفظة
+  if (currentUser.balance < grandTotal && selectedPaymentMethod === "wallet") {
+    alert("رصيدك غير كافٍ، يرجى شحن المحفظة أو اختيار طريقة دفع أخرى");
     showPage("wallet");
     return;
   }
   
-  // خصم المبلغ وإنشاء الطلب
-  currentUser.balance -= grandTotal;
+  // عرض عناصر الطلب في صفحة الدفع
+  const checkoutItems = document.getElementById("checkout-items");
+  checkoutItems.innerHTML = "";
   
+  cart.forEach(item => {
+    const itemElement = document.createElement("div");
+    itemElement.className = "checkout-item";
+    itemElement.innerHTML = `
+      <span>${item.quantity}x ${item.name}</span>
+      <span>${item.price * item.quantity} ريال</span>
+    `;
+    checkoutItems.appendChild(itemElement);
+  });
+  
+  // عرض الإجمالي
+  document.getElementById("checkout-grand-total").textContent = `${grandTotal.toFixed(2)} ريال`;
+  
+  // تهيئة خيارات الدفع
+  initPaymentOptions();
+  
+  showPage("checkout");
+}
+
+function initPaymentOptions() {
+  const paymentOptions = document.querySelectorAll('.payment-option');
+  paymentOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      paymentOptions.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedPaymentMethod = option.getAttribute('data-method');
+      updatePaymentDetails();
+    });
+  });
+  
+  updatePaymentDetails();
+}
+
+function updatePaymentDetails() {
+  const paymentDetails = document.getElementById("payment-details");
+  paymentDetails.innerHTML = "";
+  
+  if (selectedPaymentMethod === "wallet") {
+    paymentDetails.innerHTML = `
+      <div class="payment-detail">
+        <p>سيتم خصم المبلغ من رصيدك في محفظة QASEMPAY</p>
+        <p class="wallet-balance-check">الرصيد الحالي: ${currentUser.balance} ريال</p>
+      </div>
+    `;
+  } else if (selectedPaymentMethod === "stc") {
+    paymentDetails.innerHTML = `
+      <div class="payment-detail">
+        <div class="stc-payment-form">
+          <input type="tel" placeholder="رقم الجوال المرتبط بـ STC Pay">
+          <button class="verify-btn">إرسال رمز التحقق</button>
+        </div>
+      </div>
+    `;
+  } else if (selectedPaymentMethod === "card") {
+    paymentDetails.innerHTML = `
+      <div class="payment-detail">
+        <div class="card-payment-form">
+          <input type="text" placeholder="رقم البطاقة">
+          <div class="card-details">
+            <input type="text" placeholder="MM/YY" class="card-expiry">
+            <input type="text" placeholder="CVV" class="card-cvv">
+          </div>
+          <input type="text" placeholder="اسم صاحب البطاقة">
+        </div>
+      </div>
+    `;
+  } else if (selectedPaymentMethod === "cash") {
+    paymentDetails.innerHTML = `
+      <div class="payment-detail">
+        <p>سيتم الدفع نقداً عند استلام الطلب</p>
+      </div>
+    `;
+  }
+}
+
+function confirmPayment() {
+  // حساب الإجمالي
+  let total = 0;
+  cart.forEach(item => {
+    total += item.price * item.quantity;
+  });
+  const tax = total * 0.15;
+  const deliveryFee = 15;
+  const grandTotal = total + tax + deliveryFee;
+  
+  if (selectedPaymentMethod === "wallet") {
+    // خصم المبلغ من المحفظة
+    currentUser.balance -= grandTotal;
+    
+    // إضافة معاملة
+    const transaction = {
+      id: Date.now(),
+      userId: currentUser.id,
+      type: "debit",
+      amount: grandTotal,
+      description: `طلب من ${cart[0].restaurant}`,
+      date: new Date().toLocaleString('ar-SA')
+    };
+    
+    db.transactions.push(transaction);
+  }
+  
+  // إنشاء الطلب
   const order = {
     id: Date.now(),
     userId: currentUser.id,
@@ -237,22 +379,11 @@ function checkout() {
     total: grandTotal,
     date: new Date().toLocaleString('ar-SA'),
     status: "قيد التجهيز",
-    restaurant: cart[0].restaurant
+    restaurant: cart[0].restaurant,
+    paymentMethod: selectedPaymentMethod
   };
   
   db.orders.push(order);
-  
-  // إضافة معاملة
-  const transaction = {
-    id: Date.now(),
- userId: currentUser.id,
-    type: "debit",
-    amount: grandTotal,
-    description: `طلب من ${order.restaurant}`,
-    date: new Date().toLocaleString('ar-SA')
-  };
-  
-  db.transactions.push(transaction);
   
   // تفريغ السلة
   cart = [];
@@ -260,6 +391,63 @@ function checkout() {
   
   alert(`تم تأكيد الطلب بنجاح! رقم الطلب: ${order.id}`);
   showPage("orders");
+}
+
+function initiateRecharge() {
+  if (!currentUser) {
+    alert("يجب تسجيل الدخول أولاً");
+    showPage("login");
+    return;
+  }
+  
+  // الحصول على المبلغ المحدد
+  const customAmount = parseInt(document.getElementById('custom-amount').value);
+  if (customAmount > 0) {
+    rechargeAmount = customAmount;
+  } else if (selectedAmount > 0) {
+    rechargeAmount = selectedAmount;
+  } else {
+    alert("يرجى تحديد مبلغ الشحن");
+    return;
+  }
+  
+  // عرض نافذة التأكيد
+  document.getElementById('confirm-amount').textContent = rechargeAmount;
+  document.getElementById('confirm-method').textContent = 
+    rechargeMethod === "stc" ? "STC Pay" : "بطاقة ائتمان";
+  
+  document.getElementById('confirmation-modal').style.display = 'block';
+}
+
+function confirmRecharge() {
+  // زيادة الرصيد
+  currentUser.balance += rechargeAmount;
+  
+  // إضافة معاملة
+  const transaction = {
+    id: Date.now(),
+    userId: currentUser.id,
+    type: "credit",
+    amount: rechargeAmount,
+    description: `شحن محفظة - ${rechargeMethod === "stc" ? "STC Pay" : "بطاقة ائتمان"}`,
+    date: new Date().toLocaleString('ar-SA')
+  };
+  
+  db.transactions.push(transaction);
+  saveDB();
+  
+  // إغلاق النافذة
+  closeModal();
+  
+  // تحديث الواجهة
+  updateWallet();
+  renderTransactions();
+  
+  alert(`تم شحن ${rechargeAmount} ريال إلى محفظتك بنجاح!`);
+}
+
+function closeModal() {
+  document.getElementById('confirmation-modal').style.display = 'none';
 }
 
 function renderOrders() {
@@ -291,6 +479,7 @@ function renderOrders() {
       <div class="order-details">
         <p>التاريخ: ${order.date}</p>
         <p>الإجمالي: ${order.total.toFixed(2)} ريال</p>
+        <p>طريقة الدفع: ${getPaymentMethodName(order.paymentMethod)}</p>
       </div>
       <div class="order-items">
         ${order.items.map(item => `
@@ -303,6 +492,16 @@ function renderOrders() {
     `;
     container.appendChild(orderCard);
   });
+}
+
+function getPaymentMethodName(method) {
+  switch(method) {
+    case "wallet": return "المحفظة";
+    case "stc": return "STC Pay";
+    case "card": return "بطاقة ائتمان";
+    case "cash": return "نقداً عند الاستلام";
+    default: return method;
+  }
 }
 
 function login() {
@@ -418,29 +617,10 @@ function renderTransactions() {
   });
 }
 
-function addFunds(amount) {
-  if (!currentUser) {
-    alert("يجب تسجيل الدخول أولاً");
-    showPage("login");
-    return;
+// إغلاق النافذة عند النقر خارجها
+window.onclick = function(event) {
+  const modal = document.getElementById('confirmation-modal');
+  if (event.target == modal) {
+    closeModal();
   }
-  
-  currentUser.balance += amount;
-  
-  // إضافة معاملة ائتمان
-  const transaction = {
-    id: Date.now(),
-    userId: currentUser.id,
-    type: "credit",
-    amount: amount,
-    description: "شحن محفظة",
-    date: new Date().toLocaleString('ar-SA')
-  };
-  
-  db.transactions.push(transaction);
-  saveDB();
-  
-  updateWallet();
-  renderTransactions();
-  alert(`تم إضافة ${amount} ريال إلى محفظتك`);
 }
